@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/app?sslmode=disable
+      PORT: "8081"
+    ports:
+      - "8081:8081"
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      PUBLIC_API_URL: http://localhost:8081
+    ports:
+      - "3001:3000"
+
+volumes:
+  pgdata: {}

@@ -1,0 +1,10 @@
+# node
+web/node_modules/
+web/dist/
+web/.astro/
+
+# go
+api/api
+
+# env
+.env

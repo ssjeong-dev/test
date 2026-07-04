@@ -1,0 +1,137 @@
+---
+// 브라우저에서 직접 호출하므로 호스트에 퍼블리시된 API 포트를 기본값으로 사용한다.
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8081';
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>로그인</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .card {
+        width: min(360px, 90vw);
+        padding: 2rem;
+        border-radius: 16px;
+        background: #1e293b;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+      h1 {
+        margin: 0 0 1.5rem;
+        font-size: 1.4rem;
+        text-align: center;
+      }
+      label {
+        display: block;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+      }
+      input {
+        width: 100%;
+        margin-top: 0.35rem;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: #0f172a;
+        color: inherit;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.7rem;
+        border: none;
+        border-radius: 8px;
+        background: #6366f1;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      #result {
+        margin-top: 1.25rem;
+        min-height: 1.5rem;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+      #result.ok {
+        color: #22c55e;
+      }
+      #result.err {
+        color: #ef4444;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>로그인</h1>
+      <form id="login-form">
+        <label>
+          이메일
+          <input type="email" name="email" required autocomplete="username" />
+        </label>
+        <label>
+          비밀번호
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <button type="submit">로그인</button>
+      </form>
+      <div id="result"></div>
+    </main>
+
+    <script define:vars={{ apiUrl }}>
+      const form = document.getElementById('login-form');
+      const result = document.getElementById('result');
+      const button = form.querySelector('button');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        result.textContent = '';
+        result.className = '';
+        button.disabled = true;
+
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        try {
+          const res = await fetch(`${apiUrl}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          if (res.ok) {
+            result.textContent = 'OK';
+            result.className = 'ok';
+          } else {
+            const message = await res.text();
+            result.textContent = `실패: ${message || res.status}`;
+            result.className = 'err';
+          }
+        } catch (err) {
+          result.textContent = `요청 실패: ${err.message}`;
+          result.className = 'err';
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
