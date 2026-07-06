@@ -8,107 +8,45 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8081';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>로그인</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #0f172a;
-        color: #e2e8f0;
-      }
-      .card {
-        width: min(360px, 90vw);
-        padding: 2rem;
-        border-radius: 16px;
-        background: #1e293b;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-      }
-      h1 {
-        margin: 0 0 1.5rem;
-        font-size: 1.4rem;
-        text-align: center;
-      }
-      label {
-        display: block;
-        margin-bottom: 1rem;
-        font-size: 0.85rem;
-      }
-      input {
-        width: 100%;
-        margin-top: 0.35rem;
-        padding: 0.65rem 0.75rem;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        background: #0f172a;
-        color: inherit;
-        box-sizing: border-box;
-      }
-      .buttons {
-        display: flex;
-        gap: 0.75rem;
-        margin-top: 0.5rem;
-      }
-      button {
-        flex: 1;
-        padding: 0.7rem;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      button.login {
-        background: #6366f1;
-      }
-      button.signup {
-        background: #334155;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: default;
-      }
-      #result {
-        margin-top: 1.25rem;
-        min-height: 1.5rem;
-        text-align: center;
-        font-size: 1.8rem;
-        font-weight: 700;
-      }
-      #result.ok {
-        color: #22c55e;
-      }
-      #result.err {
-        color: #ef4444;
-      }
-      #result.small {
-        font-size: 0.95rem;
-        font-weight: 500;
-      }
-    </style>
   </head>
-  <body>
-    <main class="card">
-      <h1>로그인</h1>
+  <body class="m-0 min-h-screen grid place-items-center bg-slate-900 text-slate-200">
+    <main class="w-[min(360px,90vw)] p-8 rounded-2xl bg-slate-800 shadow-2xl">
+      <h1 class="mb-6 text-2xl text-center">로그인</h1>
       <form id="auth-form">
-        <label>
+        <label class="block mb-4 text-sm">
           이메일
-          <input type="email" name="email" required autocomplete="username" />
+          <input
+            type="email"
+            name="email"
+            required
+            autocomplete="username"
+            class="w-full mt-1.5 px-3 py-2.5 border border-slate-700 rounded-lg bg-slate-900 text-inherit"
+          />
         </label>
-        <label>
+        <label class="block mb-4 text-sm">
           비밀번호
-          <input type="password" name="password" required autocomplete="current-password" />
+          <input
+            type="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            class="w-full mt-1.5 px-3 py-2.5 border border-slate-700 rounded-lg bg-slate-900 text-inherit"
+          />
         </label>
-        <div class="buttons">
-          <button type="button" class="signup" id="signup-btn">가입</button>
-          <button type="submit" class="login" id="login-btn">로그인</button>
+        <div class="flex gap-3 mt-2">
+          <button
+            type="button"
+            id="signup-btn"
+            class="flex-1 py-2.5 rounded-lg text-white font-semibold cursor-pointer bg-slate-700 disabled:opacity-60 disabled:cursor-default"
+          >가입</button>
+          <button
+            type="submit"
+            id="login-btn"
+            class="flex-1 py-2.5 rounded-lg text-white font-semibold cursor-pointer bg-indigo-500 disabled:opacity-60 disabled:cursor-default"
+          >로그인</button>
         </div>
       </form>
-      <div id="result"></div>
+      <div id="result" class="mt-5 min-h-6 text-center"></div>
     </main>
 
     <script define:vars={{ apiUrl }}>
@@ -117,11 +55,25 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8081';
       const signupBtn = document.getElementById('signup-btn');
       const loginBtn = document.getElementById('login-btn');
 
+      // #result 의 상태별 Tailwind 클래스 (전체 문자열이라 JIT 스캔에 잡힌다)
+      const RESULT_BASE = 'mt-5 min-h-6 text-center';
+      const RESULT_STATE = {
+        ok: 'text-3xl font-bold text-green-500',
+        err: 'text-3xl font-bold text-red-500',
+        okSmall: 'text-base font-medium text-green-500',
+        errSmall: 'text-base font-medium text-red-500',
+      };
+
+      function showResult(text, state) {
+        result.textContent = text;
+        result.className = `${RESULT_BASE} ${RESULT_STATE[state]}`;
+      }
+
       async function submit(action) {
         if (!form.reportValidity()) return;
 
         result.textContent = '';
-        result.className = '';
+        result.className = RESULT_BASE;
         signupBtn.disabled = true;
         loginBtn.disabled = true;
 
@@ -137,21 +89,17 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8081';
 
           if (action === 'login') {
             // 로그인: DB 대조 결과에 따라 OK / Fail
-            result.textContent = res.ok ? 'OK' : 'Fail';
-            result.className = res.ok ? 'ok' : 'err';
+            showResult(res.ok ? 'OK' : 'Fail', res.ok ? 'ok' : 'err');
           } else {
             // 가입: DB 저장 성공/중복 안내
             if (res.ok) {
-              result.textContent = '가입 완료';
-              result.className = 'ok small';
+              showResult('가입 완료', 'okSmall');
             } else {
-              result.textContent = payload.message || '가입 실패';
-              result.className = 'err small';
+              showResult(payload.message || '가입 실패', 'errSmall');
             }
           }
         } catch (err) {
-          result.textContent = `요청 실패: ${err.message}`;
-          result.className = 'err';
+          showResult(`요청 실패: ${err.message}`, 'err');
         } finally {
           signupBtn.disabled = false;
           loginBtn.disabled = false;
